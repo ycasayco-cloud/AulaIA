@@ -5,9 +5,18 @@ from rag import buscar_contexto, guardar_documento
 from ia import preguntar_ia
 from loaders.pdf_loader import leer_pdf
 
+from fastapi.middleware.cors import CORSMiddleware
+
 import shutil
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Pregunta(BaseModel):
     pregunta: str
