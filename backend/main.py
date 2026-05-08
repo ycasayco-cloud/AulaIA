@@ -12,6 +12,10 @@ app = FastAPI()
 class Pregunta(BaseModel):
     pregunta: str
 
+@app.get("/")
+def inicio():
+    return {"mensaje": "AulaIA funcionando correctamente 🚀"}
+
 @app.post("/preguntar")
 def preguntar(data: Pregunta):
 
