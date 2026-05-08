@@ -1,8 +1,8 @@
 from fastapi import FastAPI, UploadFile
 from pydantic import BaseModel
 
-from backend.rag import buscar_contexto, guardar_documento
-from backend.ia import preguntar_ia
+from rag import buscar_contexto, guardar_documento
+from ia import preguntar_ia
 from loaders.pdf_loader import leer_pdf
 
 import shutil
