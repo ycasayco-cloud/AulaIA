@@ -30,6 +30,11 @@ def preguntar(data: Pregunta):
 
     contexto = buscar_contexto(data.pregunta)
 
+    if contexto is None:
+        return {
+            "respuesta": "Lo siento, mi función es responder únicamente preguntas relacionadas con el contenido del documento proporcionado."
+        }
+
     respuesta = preguntar_ia(
         contexto,
         data.pregunta
