@@ -9,7 +9,6 @@ API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 URL = "https://openrouter.ai/api/v1/chat/completions"
 
-# Historial temporal
 historial_chat = []
 
 
@@ -17,53 +16,60 @@ def preguntar_ia(contexto, pregunta):
 
     global historial_chat
 
-    # Validar API KEY
     if not API_KEY:
-        return "Error: No se encontró OPENROUTER_API_KEY en el archivo .env"
+        return "Error: No se encontró OPENROUTER_API_KEY."
 
-    # Limitar contexto PDF
-    contexto = contexto[:5000]
+    if not contexto:
+        return "Lo siento, mi función es responder únicamente preguntas relacionadas con el contenido del documento proporcionado."
 
-    # Mensaje sistema
+    contexto = contexto[:8000]
+
     system_prompt = f"""
-Eres AulaIA, un asistente académico especializado EXCLUSIVAMENTE
-en el contenido del documento proporcionado.
+Eres AulaIA, un asistente académico especializado en el documento
+proporcionado por el docente.
 
-REGLAS OBLIGATORIAS:
+Tu función principal es ayudar al estudiante a comprender,
+explicar y analizar el contenido de ese documento.
 
-1. Responde únicamente preguntas relacionadas con el contenido
-   del documento.
+REGLAS:
 
-2. Utiliza exclusivamente la información proporcionada en el
-   CONTEXTO DEL DOCUMENTO.
+1. Responde únicamente utilizando la información contenida en el
+   documento.
 
-3. No utilices conocimientos externos para responder.
+2. Puedes explicar, resumir, definir, comparar o desarrollar
+   conceptos que estén presentes en el documento.
 
-4. No inventes información.
+3. Si el estudiante pregunta de forma general sobre "el documento",
+   "el contenido", "de qué trata", "qué puedes explicar",
+   "explícame el documento" o expresiones similares, debes
+   interpretar que se refiere al documento proporcionado y
+   responder utilizando su contenido.
 
-5. Si la pregunta no está relacionada con el documento,
-   responde EXACTAMENTE:
+4. Si el estudiante saluda, puedes responder brevemente y recordar
+   que puedes ayudarle con el documento.
+
+5. Si la pregunta no tiene relación con el documento, responde
+   exactamente:
 
 "Lo siento, mi función es responder únicamente preguntas relacionadas
 con el contenido del documento proporcionado."
 
 6. Si la pregunta está relacionada con el documento pero la
-   información necesaria no aparece en el contexto, responde:
+   información solicitada no aparece en él, responde:
 
 "Lo siento, esa información no se encuentra en el documento
 proporcionado."
 
-7. No respondas preguntas sobre temas generales, programación,
-   política, noticias, entretenimiento, matemáticas u otros temas
-   si no están relacionados con el documento.
+7. No utilices conocimientos externos para completar una respuesta.
 
-8. Mantén un tono académico, claro y profesional.
+8. No inventes información.
 
-CONTEXTO DEL DOCUMENTO:
+9. Mantén un tono académico, claro, amigable y profesional.
+
+DOCUMENTO PROPORCIONADO:
 {contexto}
 """
 
-    # Construir mensajes
     mensajes = [
         {
             "role": "system",
@@ -71,10 +77,8 @@ CONTEXTO DEL DOCUMENTO:
         }
     ]
 
-    # Agregar historial
     mensajes.extend(historial_chat)
 
-    # Nueva pregunta
     mensajes.append({
         "role": "user",
         "content": pregunta
@@ -83,15 +87,15 @@ CONTEXTO DEL DOCUMENTO:
     headers = {
         "Authorization": f"Bearer {API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:8000",
+        "HTTP-Referer": "https://aulaia.onrender.com",
         "X-Title": "AulaIA"
     }
 
     data = {
         "model": "openai/gpt-4o-mini",
         "messages": mensajes,
-        "temperature": 0.7,
-        "max_tokens": 400
+        "temperature": 0.3,
+        "max_tokens": 500
     }
 
     try:
@@ -103,24 +107,19 @@ CONTEXTO DEL DOCUMENTO:
             timeout=30
         )
 
-        print("STATUS:", response.status_code)
-
         resultado = response.json()
 
-        print("RESPUESTA API:")
-        print(resultado)
+        print("STATUS:", response.status_code)
+        print("RESPUESTA API:", resultado)
 
-        # Error HTTP
         if response.status_code != 200:
             return f"Error API ({response.status_code}): {resultado}"
 
-        # Validar respuesta
         if "choices" not in resultado:
             return f"Respuesta inválida: {resultado}"
 
         respuesta_ia = resultado["choices"][0]["message"]["content"]
 
-        # Guardar historial
         historial_chat.append({
             "role": "user",
             "content": pregunta
@@ -131,7 +130,6 @@ CONTEXTO DEL DOCUMENTO:
             "content": respuesta_ia
         })
 
-        # Limitar historial
         historial_chat = historial_chat[-10:]
 
         return respuesta_ia
